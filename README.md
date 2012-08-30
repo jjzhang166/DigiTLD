@@ -11,4 +11,4 @@ cmake ..
 
 make
 
-execute .libfaceGUI in build/bin directory
+execute libfaceGUI in build/bin directory
