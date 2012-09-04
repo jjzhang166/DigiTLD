@@ -178,6 +178,8 @@ Database::~Database()
 QList<Face> Database::detectFaces(const Image& image)
 {
     const IplImage* img = image.imageData();
+    //cvShowImage("show1",img );
+    cvWaitKey(0);
     CvSize originalSize = cvSize(0,0);
 
     if (!image.originalSize().isNull())

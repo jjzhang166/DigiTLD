@@ -42,7 +42,7 @@ Settings::Settings() :
     m_alternating(false),
     m_exportModelAfterRun(false),
     m_trajectory(20),
-    m_method(IMACQ_CAM),
+    m_method(IMACQ_IMGS),
     m_startFrame(1),
     m_lastFrame(0),
     m_minScale(-10),

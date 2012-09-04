@@ -87,7 +87,7 @@ public:
         imAcqFree(imAcq);
     }
 
-    void doWork();
+    void doWork(IplImage* ,bool,const char*);
 };
 
 #endif /* MAIN_H_ */

@@ -168,12 +168,10 @@ void MainWindow::openConfig()
 
 void MainWindow::detectFaces()
 {
-    //system("/home/mmh/softwares/digitld/qtbuild/bin/opentld");
     currentFaces.clear();
     currentFaces = database->detectFaces(currentPhoto);
     Face face;
     kDebug() << "libkface detected : " << currentFaces.size() << " faces.";
-    std::cout<<currentFaces.size() <<std::endl;
     FaceItem* item=0;
     foreach(item, faceitems)
         item->setVisible(false);
@@ -189,29 +187,37 @@ void MainWindow::detectFaces()
 
 void MainWindow::updateConfig()
 {
-    kDebug() << "Path of config directory = " << database->configPath();
-
-    // Assign the text of the faceitems to the name of each face. When there is no text, drop that face from currentfaces.
-    QList<Face> updateList;
-
-    for(int i = 0 ; i <currentFaces.size(); ++i)
+    for(int i = 0; i < currentFaces.size(); ++i)
     {
-        if(faceitems[i]->text() != "?")
-        {
-            currentFaces[i].setName(faceitems[i]->text());
-            updateList.append(currentFaces.at(i));
-        }
-    }
+            Main *main = new Main();
+            Config config;
+            ImAcq *imAcq = imAcqAlloc();
+            Gui *gui = new Gui();
 
-    if( database->updateFaces(updateList) )
-    {
-        kDebug() << "Trained";
-        database->saveConfig();
-    }
-    else
-    {
-        kDebug() << "No faces to train.";
-    }
+            main->gui = gui;
+            main->imAcq = imAcq;
+
+            config.configure(main);
+
+            srand(main->seed);
+
+            imAcqInit(imAcq);
+            Face face;
+
+            face = currentFaces[i];
+            QImage oneface = currentPhoto.copy(face.toRect());
+            IplImage *faceImage = cvCreateImageHeader( cvSize(oneface.width(), oneface.height()), IPL_DEPTH_8U, 4);
+            faceImage->imageData = (char*) oneface.bits();
+
+            uchar* newdata = (uchar*) malloc(sizeof(uchar) * oneface.byteCount());
+            memcpy(newdata, oneface.bits(),oneface.byteCount());
+            faceImage->imageData = (char*) newdata;
+            QByteArray ba = faceitems[i]->text().toLocal8Bit();
+            const char *faceName= ba.data();
+            std::cout<<faceName<<std::endl;
+            main->doWork(faceImage,true,faceName);//(const char*)face.name().toLocal8Bit().data());
+            delete main;
+     }
 }
 
 void MainWindow::updateAccuracy()
@@ -233,38 +239,35 @@ void MainWindow::clearScene()
 
 void MainWindow::recognise()
 {
-   Main *main = new Main();
-    Config config;
-    ImAcq *imAcq = imAcqAlloc();
-    Gui *gui = new Gui();
-
-    main->gui = gui;
-    main->imAcq = imAcq;
-
-    config.configure(main);
-
-    srand(main->seed);
-
-    imAcqInit(imAcq);
-
-    if(main->showOutput)
-    {
-        gui->init();
-    }
-
-    main->doWork();
-
-    delete main; 
-   QList<double> closeness = database->recognizeFaces(currentFaces);
-
-    if(closeness.isEmpty())
-        return;
-
     for(int i = 0; i < currentFaces.size(); ++i)
     {
-        faceitems[i]->suggest(currentFaces[i].name());
-        kDebug() << "Face #"<< i+1 << " is closest to the person with ID " << currentFaces[i].id()
-                 << " and name "<< currentFaces[i].name()
-                 << " with a distance of "<< closeness[i];
-    }
+            Main *main = new Main();
+            Config config;
+            ImAcq *imAcq = imAcqAlloc();
+            Gui *gui = new Gui();
+
+            main->gui = gui;
+            main->imAcq = imAcq;
+
+            config.configure(main);
+
+            srand(main->seed);
+
+            imAcqInit(imAcq);
+            Face face;
+
+            face = currentFaces[i];
+            QImage oneface = currentPhoto.copy(face.toRect());
+            IplImage *faceImage = cvCreateImageHeader( cvSize(oneface.width(), oneface.height()), IPL_DEPTH_8U, 4);
+            faceImage->imageData = (char*) oneface.bits();
+
+            uchar* newdata = (uchar*) malloc(sizeof(uchar) * oneface.byteCount());
+            memcpy(newdata, oneface.bits(), oneface.byteCount());
+            faceImage->imageData = (char*) newdata;
+            const char *faceFile="facedatabaseFile";
+            std::cout<<"posiibility of face "<<i<<" is\n"<<std::endl;
+
+            main->doWork(faceImage,false,faceFile);//(const char*)face.name().toLocal8Bit().data());
+            delete main;
+     }
 }
